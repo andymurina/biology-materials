@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>遺伝子の本体｜生物基礎</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0c1018;--surf:#141926;--surf2:#1a2235;--bdr:#252f45;
+  --grn:#22c55e;--grnl:#052e16;--grnb:#16a34a;
+  --red:#ef4444;--redl:#300a0a;--redb:#dc2626;
+  --blu:#3b82f6;--blul:#0f1f44;--blub:#2563eb;
+  --ylw:#facc15;--ylwl:#1c1500;--ylwb:#ca8a04;
+  --prp:#a855f7;--prpl:#1e0933;
+  --txt:#e2e8f0;--mut:#94a3b8;--dim:#475569;
+  --r:10px;
+}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
+
+header{background:#070d1a;border-bottom:1px solid var(--bdr);padding:12px 20px;
+  display:flex;align-items:center;gap:12px}
+.hbadge{background:#1e3a5f;color:#60a5fa;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.06em}
+.htitle{font-size:16px;font-weight:900}
+
+/* タブ */
+.tabs{display:flex;background:var(--surf);border-bottom:2px solid var(--bdr);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tab{padding:11px 18px;font-size:12px;font-weight:700;color:var(--dim);cursor:pointer;border:none;
+  background:none;font-family:inherit;white-space:nowrap;border-bottom:3px solid transparent;margin-bottom:-2px;transition:.2s}
+.tab:hover{color:var(--txt);background:var(--surf2)}
+.tab.on{color:var(--txt)}
+.t0.on{border-bottom-color:#60a5fa;color:#60a5fa}
+.t1.on{border-bottom-color:var(--grn);color:var(--grn)}
+.t2.on{border-bottom-color:var(--blu);color:var(--blu)}
+.t3.on{border-bottom-color:var(--ylw);color:var(--ylw)}
+.t4.on{border-bottom-color:var(--prp);color:var(--prp)}
+
+.scr{display:none;max-width:920px;margin:0 auto;padding:22px 16px}
+.scr.on{display:block}
+
+/* アニメーションステージ */
+.stage{background:#060c18;border:1px solid var(--bdr);border-radius:var(--r);
+  padding:16px;margin:14px 0;position:relative;overflow:hidden}
+.stage-bg{position:absolute;inset:0;pointer-events:none;opacity:.06}
+
+/* SVGアニメ */
+.anim-svg{width:100%;display:block}
+
+/* コントロール */
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.ctrl-btn{padding:9px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;
+  border:2px solid;background:transparent;font-family:inherit;transition:.2s;color:inherit}
+.ctrl-btn:hover{transform:translateY(-2px)}
+.ctrl-btn.active{color:#fff!important}
+.ctrl-btn.grn{border-color:var(--grn);color:var(--grn)}.ctrl-btn.grn.active{background:var(--grnb)}
+.ctrl-btn.red{border-color:var(--red);color:var(--red)}.ctrl-btn.red.active{background:var(--redb)}
+.ctrl-btn.blu{border-color:var(--blu);color:var(--blu)}.ctrl-btn.blu.active{background:var(--blub)}
+.ctrl-btn.ylw{border-color:var(--ylw);color:var(--ylw)}.ctrl-btn.ylw.active{background:var(--ylwb);color:#000!important}
+.ctrl-btn.prp{border-color:var(--prp);color:var(--prp)}.ctrl-btn.prp.active{background:var(--prp)}
+.ctrl-btn.gray{border-color:var(--dim);color:var(--mut)}.ctrl-btn.gray.active{background:var(--dim)}
+
+/* 結果パネル */
+.result{border-radius:8px;padding:14px 18px;margin:10px 0;font-size:14px;
+  line-height:1.8;border:1px solid;min-height:60px;transition:.4s}
+.result.grn{background:var(--grnl);border-color:var(--grn)}
+.result.red{background:var(--redl);border-color:var(--red)}
+.result.blu{background:var(--blul);border-color:var(--blu)}
+.result.ylw{background:var(--ylwl);border-color:var(--ylw)}
+.result.gray{background:var(--surf2);border-color:var(--bdr)}
+
+/* 進捗ドット */
+.prog{display:flex;gap:6px;margin:8px 0}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--dim);transition:.3s}
+.dot.done{background:var(--grn)}
+
+/* ポイント */
+.point{border-left:3px solid;border-radius:0 8px 8px 0;padding:12px 16px;
+  margin:10px 0;font-size:13px;line-height:1.8}
+.point.grn{background:var(--grnl);border-color:var(--grn)}
+.point.blu{background:var(--blul);border-color:var(--blu)}
+.point.ylw{background:var(--ylwl);border-color:var(--ylw)}
+.point.prp{background:var(--prpl);border-color:var(--prp)}
+
+/* カード */
+.card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:18px;margin-bottom:14px}
+.card h3{font-size:14px;font-weight:700;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--bdr)}
+
+/* 実験ステップ */
+.step-tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;margin-right:8px}
+
+/* まとめ用語グリッド */
+.term-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin:12px 0}
+.term-card{background:var(--prpl);border:1px solid var(--prp);border-radius:8px;padding:14px}
+
+/* アニメーション */
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)}}
+@keyframes grow{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes flyRight{from{transform:translateX(0);opacity:1}to{transform:translateX(200px);opacity:0}}
+@keyframes flyLeft{from{transform:translateX(0);opacity:1}to{transform:translateX(-200px);opacity:0}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes flash{0%,100%{opacity:1}50%{opacity:.2}}
+
+.float{animation:float 2.4s ease-in-out infinite}
+.pulse-anim{animation:pulse 1.5s ease-in-out infinite}
+.fade-in{animation:fadeIn .5s ease both}
+
+/* 実験チェック */
+.check-mark{display:inline-block;width:20px;height:20px;border-radius:50%;
+  background:var(--grn);color:#fff;font-size:12px;text-align:center;line-height:20px;
+  margin-left:6px;animation:grow .3s ease both}
+
+/* 結論バナー */
+.conclusion{background:linear-gradient(135deg,#0f2027,#1a3a5c);
+  border:1px solid #2a5080;border-radius:var(--r);padding:22px;margin:16px 0}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="hbadge">生物基礎</span>
+  <span class="htitle">遺伝子の本体を探れ — 3つの歴史的実験</span>
+</header>
+
+<div class="tabs">
+  <button class="tab t0 on" data-t="intro">はじめに</button>
+  <button class="tab t1" data-t="griffin">①グリフィス</button>
+  <button class="tab t2" data-t="avery">②エイブリー</button>
+  <button class="tab t3" data-t="hershey">③ハーシー&amp;チェイス</button>
+  <button class="tab t4" data-t="result">まとめ</button>
+</div>
+
+<!-- ═══════════════ はじめに ═══════════════ -->
+<div class="scr on" id="intro">
+  <div class="card">
+    <h3>今日の問い</h3>
+    <div class="point blu">
+      <strong>問い1</strong>　すべての生物の遺伝子の本体は何か？<br>
+      <strong>問い2</strong>　遺伝情報は何に含まれ、どのようにして親から子に伝わるのか？
+    </div>
+  </div>
+
+  <!-- タイムラインSVG -->
+  <div class="stage" style="min-height:280px">
+    <svg class="anim-svg" viewBox="0 0 680 260" xmlns="http://www.w3.org/2000/svg">
+      <!-- 横軸 -->
+      <line x1="60" y1="130" x2="620" y2="130" stroke="#2a3248" stroke-width="2"/>
+      <!-- 1928 グリフィス -->
+      <circle cx="160" cy="130" r="12" fill="#16a34a" opacity=".9"/>
+      <text x="160" y="100" text-anchor="middle" fill="#22c55e" font-size="12" font-weight="700" font-family="Noto Sans JP">1928年</text>
+      <text x="160" y="118" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Noto Sans JP">グリフィス</text>
+      <text x="160" y="155" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Noto Sans JP">形質転換の</text>
+      <text x="160" y="170" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Noto Sans JP">発見</text>
+      <!-- ネズミ🐭 -->
+      <text x="160" y="210" text-anchor="middle" font-size="28">🐭</text>
+      <!-- 1944 エイブリー -->
+      <circle cx="380" cy="130" r="12" fill="#2563eb" opacity=".9"/>
+      <text x="380" y="100" text-anchor="middle" fill="#3b82f6" font-size="12" font-weight="700" font-family="Noto Sans JP">1944年</text>
+      <text x="380" y="118" text-anchor="middle" fill="#3b82f6" font-size="11" font-family="Noto Sans JP">エイブリーら</text>
+      <text x="380" y="155" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Noto Sans JP">形質転換因子</text>
+      <text x="380" y="170" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Noto Sans JP">= DNA と判明</text>
+      <text x="380" y="210" text-anchor="middle" font-size="28">🧬</text>
+      <!-- 1952 ハーシー -->
+      <circle cx="580" cy="130" r="12" fill="#ca8a04" opacity=".9"/>
+      <text x="580" y="100" text-anchor="middle" fill="#facc15" font-size="12" font-weight="700" font-family="Noto Sans JP">1952年</text>
+      <text x="580" y="118" text-anchor="middle" fill="#facc15" font-size="11" font-family="Noto Sans JP">ハーシー&amp;チェイス</text>
+      <text x="580" y="155" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Noto Sans JP">ファージが注入</text>
+      <text x="580" y="170" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Noto Sans JP">するのはDNA</text>
+      <text x="580" y="210" text-anchor="middle" font-size="28">🦠</text>
+      <!-- 矢印 -->
+      <path d="M172 130 L368 130" stroke="#2a3248" stroke-width="1.5" marker-end="url(#arr)" fill="none"/>
+      <path d="M392 130 L568 130" stroke="#2a3248" stroke-width="1.5" marker-end="url(#arr)" fill="none"/>
+      <defs>
+        <marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M1 1L7 4L1 7" fill="none" stroke="#475569" stroke-width="1.5"/>
+        </marker>
+      </defs>
+      <!-- 結論 -->
+      <rect x="220" y="230" width="240" height="24" rx="12" fill="#1e0933"/>
+      <text x="340" y="246" text-anchor="middle" fill="#a855f7" font-size="12" font-weight="700" font-family="Noto Sans JP">遺伝子の本体 = DNA</text>
+    </svg>
+  </div>
+
+  <div style="text-align:center;margin-top:16px">
+    <button class="ctrl-btn grn" onclick="goTab('griffin')">実験①グリフィスから始める →</button>
+  </div>
+</div>
+
+<!-- ═══════════════ グリフィス ═══════════════ -->
+<div class="scr" id="griffin">
+  <div style="color:var(--grn);font-size:11px;font-weight:700;letter-spacing:.1em;margin-bottom:6px">1928年 ── フレデリック・グリフィス</div>
+  <div style="font-size:19px;font-weight:900;margin-bottom:16px">実験① 肺炎球菌の形質転換</div>
+
+  <div class="card">
+    <h3>登場する菌</h3>
+    <div style="display:flex;gap:16px;flex-wrap:wrap">
+      <div style="flex:1;min-width:180px;background:var(--redl);border:1px solid var(--red);border-radius:8px;padding:14px;text-align:center">
+        <div style="font-size:36px;margin-bottom:6px">🔴</div>
+        <div style="color:var(--red);font-weight:700;font-size:14px">S型菌（Smooth）</div>
+        <div style="color:var(--mut);font-size:12px;margin-top:4px">莢膜あり・表面なめらか<br><strong style="color:var(--red)">病原性あり</strong>（マウスを死亡させる）</div>
+      </div>
+      <div style="flex:1;min-width:180px;background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;padding:14px;text-align:center">
+        <div style="font-size:36px;margin-bottom:6px">⚪</div>
+        <div style="color:var(--mut);font-weight:700;font-size:14px">R型菌（Rough）</div>
+        <div style="color:var(--mut);font-size:12px;margin-top:4px">莢膜なし・表面でこぼこ<br><strong style="color:var(--grn)">病原性なし</strong>（マウスは生存）</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>実験シミュレーター ── 注射する菌を選んでマウスの反応を観察しよう</h3>
+    <div class="controls">
+      <button class="ctrl-btn red" id="g0" onclick="doGriffin(0)">🔴 生きたS型菌</button>
+      <button class="ctrl-btn gray" id="g1" onclick="doGriffin(1)">⚪ 生きたR型菌</button>
+      <button class="ctrl-btn gray" id="g2" onclick="doGriffin(2)">🔥 加熱殺菌S型菌</button>
+      <button class="ctrl-btn ylw" id="g3" onclick="doGriffin(3)">🔥+⚪ 加熱S型＋生R型</button>
+    </div>
+
+    <!-- アニメーションステージ -->
+    <div class="stage" id="gStage" style="min-height:180px">
+      <svg id="gSvg" class="anim-svg" viewBox="0 0 580 160">
+        <!-- 注射器 -->
+        <g id="gSyringe">
+          <rect x="20" y="68" width="100" height="24" rx="4" fill="#1a2235" stroke="#252f45"/>
+          <rect x="118" y="76" width="30" height="8" rx="2" fill="#252f45"/>
+          <text id="gBactLabel" x="70" y="84" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Noto Sans JP">←選択してください</text>
+        </g>
+        <!-- 注射矢印 -->
+        <path id="gArrow" d="M150 80 L220 80" stroke="#252f45" stroke-width="2" marker-end="url(#arG)" fill="none" opacity=".3"/>
+        <defs>
+          <marker id="arG" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+            <path d="M1 1L7 4L1 7" fill="none" stroke="#475569" stroke-width="1.5"/>
+          </marker>
+        </defs>
+        <!-- マウス（体） -->
+        <g id="gMouse" transform="translate(280,40)">
+          <!-- 体 -->
+          <ellipse cx="60" cy="60" rx="50" ry="38" fill="#8B7355"/>
+          <!-- 頭 -->
+          <ellipse cx="25" cy="50" rx="28" ry="24" fill="#8B7355"/>
+          <!-- 耳 -->
+          <circle cx="12" cy="28" r="12" fill="#D4A0A0"/>
+          <circle cx="30" cy="24" r="10" fill="#D4A0A0"/>
+          <!-- 目 -->
+          <circle cx="18" cy="44" r="3" fill="#1a1a1a"/>
+          <circle cx="19" cy="43" r="1" fill="#fff" opacity=".6"/>
+          <!-- 鼻 -->
+          <ellipse cx="4" cy="52" rx="4" ry="3" fill="#D4A0A0"/>
+          <!-- ヒゲ -->
+          <line x1="-20" y1="50" x2="2" y2="52" stroke="#555" stroke-width="1"/>
+          <line x1="-20" y1="54" x2="2" y2="53" stroke="#555" stroke-width="1"/>
+          <line x1="6" y1="52" x2="26" y2="50" stroke="#555" stroke-width="1"/>
+          <!-- 尻尾 -->
+          <path d="M110 70 Q140 60 148 40" stroke="#8B7355" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <!-- 脚 -->
+          <ellipse cx="40" cy="95" rx="12" ry="7" fill="#7A6245"/>
+          <ellipse cx="75" cy="98" rx="12" ry="7" fill="#7A6245"/>
+        </g>
+        <!-- 結果テキスト -->
+        <g id="gResultIcon" opacity="0">
+          <text id="gResultText" x="290" y="140" text-anchor="middle" font-size="14" fill="#94a3b8" font-family="Noto Sans JP"></text>
+        </g>
+        <!-- 発見マーク（④用） -->
+        <g id="gSpecial" opacity="0">
+          <text x="460" y="60" text-anchor="middle" font-size="32">❗</text>
+          <text x="460" y="85" text-anchor="middle" fill="#facc15" font-size="12" font-family="Noto Sans JP" font-weight="700">形質転換！</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="result gray" id="gResult">菌の種類を選ぶとマウスがどうなるか表示されます。</div>
+    <div id="gInsight" style="display:none"></div>
+
+    <div style="margin-top:12px">
+      <div class="prog" id="gProg">
+        <div class="dot" id="gd0"></div><div class="dot" id="gd1"></div>
+        <div class="dot" id="gd2"></div><div class="dot" id="gd3"></div>
+      </div>
+      <div style="font-size:12px;color:var(--mut)">4条件すべて試そう（<span id="gCnt">0</span>/4）</div>
+    </div>
+    <div id="gDone" style="display:none;margin-top:12px">
+      <div class="point grn">
+        <strong>全条件確認完了！</strong><br>
+        ④の結果が驚くべきことに「マウス死亡」。死んだS型菌の何かがR型菌を変えた → これが<strong>形質転換</strong>。
+      </div>
+      <button class="ctrl-btn blu" style="margin-top:8px" onclick="goTab('avery')">実験②へ →</button>
+    </div>
+  </div>
+
+  <div class="point grn"><strong>形質転換とは：</strong>ある生物の遺伝情報が別の個体に取り込まれ、形質が変化すること。グリフィスは「形質転換因子」の存在を示したが、正体は不明だった。</div>
+</div>
+
+<!-- ═══════════════ エイブリー ═══════════════ -->
+<div class="scr" id="avery">
+  <div style="color:var(--blu);font-size:11px;font-weight:700;letter-spacing:.1em;margin-bottom:6px">1944年 ── オズワルド・エイブリーら</div>
+  <div style="font-size:19px;font-weight:900;margin-bottom:16px">実験② 形質転換因子の正体を絞り込む</div>
+
+  <div class="card">
+    <h3>実験の発想</h3>
+    <div style="font-size:14px;line-height:1.8;color:var(--mut)">
+      S型菌の抽出液から「ある分子を壊す酵素」を加えてR型菌と混合する。<br>
+      壊すと形質転換が止まる → その分子が形質転換因子（遺伝子の本体）だ！
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>実験シミュレーター ── 分解する物質を選ぼう</h3>
+    <div class="controls">
+      <button class="ctrl-btn blu" id="a0" onclick="doAvery('DNA')">🧬 DNAを分解</button>
+      <button class="ctrl-btn red" id="a1" onclick="doAvery('prot')">🔴 タンパク質を分解</button>
+      <button class="ctrl-btn ylw" id="a2" onclick="doAvery('RNA')">🟡 RNAを分解</button>
+      <button class="ctrl-btn grn" id="a3" onclick="doAvery('none')">✅ 何もしない（対照）</button>
+    </div>
+
+    <!-- フラスコ実験アニメ -->
+    <div class="stage" id="aStage" style="min-height:200px">
+      <svg id="aSvg" class="anim-svg" viewBox="0 0 580 180">
+        <!-- S型菌抽出液フラスコ -->
+        <g transform="translate(30,20)">
+          <path d="M30 0 L30 50 L5 100 L55 100 L30 50" stroke="#3b82f6" stroke-width="2" fill="none"/>
+          <ellipse cx="30" cy="100" rx="25" ry="8" fill="#1a2235" stroke="#3b82f6" stroke-width="2"/>
+          <ellipse cx="30" cy="0" rx="12" ry="4" fill="#252f45" stroke="#3b82f6"/>
+          <!-- 液体 -->
+          <ellipse cx="30" cy="90" rx="22" ry="7" fill="#1e3a5f" opacity=".9"/>
+          <text x="30" y="60" text-anchor="middle" fill="#3b82f6" font-size="10" font-family="Noto Sans JP">S型菌</text>
+          <text x="30" y="72" text-anchor="middle" fill="#3b82f6" font-size="10" font-family="Noto Sans JP">抽出液</text>
+        </g>
+
+        <!-- 酵素ドロップ -->
+        <g id="aEnzyme" opacity="0">
+          <circle cx="160" cy="40" r="16" fill="#7c3aed" opacity=".8"/>
+          <text x="160" y="37" text-anchor="middle" fill="#fff" font-size="9" font-family="Noto Sans JP">分解</text>
+          <text x="160" y="49" text-anchor="middle" fill="#fff" font-size="9" font-family="Noto Sans JP">酵素</text>
+          <line x1="160" y1="56" x2="160" y2="80" stroke="#7c3aed" stroke-width="1.5" stroke-dasharray="4 2"/>
+        </g>
+
+        <!-- 混合フラスコ -->
+        <g transform="translate(200,20)">
+          <path d="M30 0 L30 50 L5 100 L55 100 L30 50" stroke="#475569" stroke-width="2" fill="none"/>
+          <ellipse cx="30" cy="100" rx="25" ry="8" fill="#1a2235" stroke="#475569" stroke-width="2"/>
+          <ellipse cx="30" cy="0" rx="12" ry="4" fill="#252f45" stroke="#475569"/>
+          <text x="30" y="60" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="Noto Sans JP">R型菌</text>
+          <text x="30" y="72" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="Noto Sans JP">＋抽出液</text>
+          <ellipse cx="30" cy="90" rx="22" ry="7" fill="#1a2235" id="aMix"/>
+        </g>
+
+        <!-- 矢印 -->
+        <path d="M115 90 L195 90" stroke="#252f45" stroke-width="1.5" marker-end="url(#arA)" fill="none"/>
+        <defs>
+          <marker id="arA" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+            <path d="M1 1L7 4L1 7" fill="none" stroke="#475569" stroke-width="1.5"/>
+          </marker>
+        </defs>
+
+        <!-- シャーレ（結果） -->
+        <g transform="translate(360,30)">
+          <ellipse cx="80" cy="80" rx="75" ry="50" fill="#1a2235" stroke="#252f45" stroke-width="2"/>
+          <ellipse cx="80" cy="75" rx="72" ry="47" fill="#060c18" stroke="#1a2235" stroke-width="1"/>
+          <text x="80" y="70" text-anchor="middle" fill="#475569" font-size="11" font-family="Noto Sans JP">シャーレ</text>
+          <text x="80" y="84" id="aColonyText" text-anchor="middle" fill="#475569" font-size="11" font-family="Noto Sans JP">（培養結果）</text>
+          <!-- コロニー群 -->
+          <g id="aColonies" opacity="0">
+            <circle cx="55" cy="65" r="7" fill="#16a34a"/>
+            <circle cx="80" cy="58" r="9" fill="#16a34a"/>
+            <circle cx="105" cy="67" r="7" fill="#16a34a"/>
+            <circle cx="68" cy="82" r="6" fill="#16a34a"/>
+            <circle cx="93" cy="80" r="8" fill="#16a34a"/>
+          </g>
+          <g id="aNoColony" opacity="0">
+            <circle cx="70" cy="72" r="5" fill="#475569"/>
+            <circle cx="90" cy="68" r="4" fill="#475569"/>
+            <text x="80" y="92" text-anchor="middle" fill="#ef4444" font-size="10" font-family="Noto Sans JP">S型菌なし</text>
+          </g>
+        </g>
+
+        <text x="406" y="150" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Noto Sans JP">培養後のシャーレ</text>
+      </svg>
+    </div>
+
+    <div class="result gray" id="aResult">分解する物質を選ぶと実験結果が表示されます。</div>
+    <div id="aInsight" style="display:none"></div>
+
+    <div style="margin-top:12px">
+      <div class="prog" id="aProg">
+        <div class="dot" id="ad0"></div><div class="dot" id="ad1"></div>
+        <div class="dot" id="ad2"></div><div class="dot" id="ad3"></div>
+      </div>
+      <div style="font-size:12px;color:var(--mut)">4条件すべて試そう（<span id="aCnt">0</span>/4）</div>
+    </div>
+    <div id="aDone" style="display:none;margin-top:12px">
+      <div class="point blu"><strong>完了！</strong> DNAを壊したときだけ形質転換が止まった。→ <strong>形質転換因子＝DNA</strong></div>
+      <button class="ctrl-btn ylw" style="margin-top:8px" onclick="goTab('hershey')">実験③へ →</button>
+    </div>
+  </div>
+
+  <div class="point blu"><strong>対照実験の重要性：</strong>「何もしない」条件を置くことで、酵素処理の効果を正確に比較できる。</div>
+</div>
+
+<!-- ═══════════════ ハーシー＆チェイス ═══════════════ -->
+<div class="scr" id="hershey">
+  <div style="color:var(--ylw);font-size:11px;font-weight:700;letter-spacing:.1em;margin-bottom:6px">1952年 ── ハーシー &amp; チェイス</div>
+  <div style="font-size:19px;font-weight:900;margin-bottom:16px">実験③ ファージが細菌に注入するのは？</div>
+
+  <div class="card">
+    <h3>T2ファージとは</h3>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+      <div style="flex:1;min-width:200px">
+        <p style="font-size:14px;line-height:1.8;color:var(--mut)">T2ファージは大腸菌に感染するウイルス。成分は<strong style="color:var(--ylw)">DNA</strong>と<strong style="color:var(--red)">タンパク質</strong>だけ。感染すると何かを細菌に注入し、大量のファージを作らせる。</p>
+        <div style="margin-top:10px">
+          <div style="background:var(--ylwl);border:1px solid var(--ylw);border-radius:6px;padding:8px 12px;font-size:13px;margin-bottom:6px">
+            <span style="color:var(--ylw);font-weight:700">³²P（リン）</span> → DNAに含まれる → DNAの追跡に使う
+          </div>
+          <div style="background:var(--redl);border:1px solid var(--red);border-radius:6px;padding:8px 12px;font-size:13px">
+            <span style="color:var(--red);font-weight:700">³⁵S（硫黄）</span> → タンパク質に含まれる → タンパク質の追跡に使う
+          </div>
+        </div>
+      </div>
+      <!-- ファージのイラスト -->
+      <div style="text-align:center;min-width:120px">
+        <svg viewBox="0 0 120 160" width="110" height="147">
+          <!-- 頭部（DNA入り） -->
+          <polygon points="60,10 95,30 95,70 60,90 25,70 25,30" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2"/>
+          <text x="60" y="50" text-anchor="middle" fill="#facc15" font-size="11" font-weight="700" font-family="sans-serif">DNA</text>
+          <text x="60" y="64" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="sans-serif">(³²P)</text>
+          <!-- 首 -->
+          <rect x="52" y="90" width="16" height="12" fill="#1a2235" stroke="#3b82f6" stroke-width="1.5"/>
+          <!-- 基板（タンパク質） -->
+          <rect x="36" y="102" width="48" height="14" rx="3" fill="#2d0a0a" stroke="#ef4444" stroke-width="1.5"/>
+          <text x="60" y="113" text-anchor="middle" fill="#ef4444" font-size="9" font-family="sans-serif">タンパク質 (³⁵S)</text>
+          <!-- 脚 -->
+          <line x1="42" y1="116" x2="32" y2="148" stroke="#ef4444" stroke-width="2"/>
+          <line x1="52" y1="116" x2="48" y2="148" stroke="#ef4444" stroke-width="2"/>
+          <line x1="68" y1="116" x2="72" y2="148" stroke="#ef4444" stroke-width="2"/>
+          <line x1="78" y1="116" x2="88" y2="148" stroke="#ef4444" stroke-width="2"/>
+        </svg>
+        <div style="font-size:11px;color:var(--mut)">T2ファージ</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>実験シミュレーター ── 標識を選んで感染・遠心分離の結果を観察しよう</h3>
+    <div class="controls">
+      <button class="ctrl-btn ylw" id="h0" onclick="doHershey('P32')">³²P でDNAを標識</button>
+      <button class="ctrl-btn red" id="h1" onclick="doHershey('S35')">³⁵S でタンパク質を標識</button>
+    </div>
+
+    <!-- 遠心分離アニメ -->
+    <div class="stage" id="hStage" style="min-height:220px">
+      <svg id="hSvg" class="anim-svg" viewBox="0 0 580 200">
+        <!-- ファージ群（感染前） -->
+        <g id="hPhageGroup">
+          <g transform="translate(40,50) scale(0.5)">
+            <polygon points="30,0 55,14 55,42 30,56 5,42 5,14" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2"/>
+            <text x="30" y="30" text-anchor="middle" fill="#facc15" font-size="14" font-weight="700">DNA</text>
+            <rect x="18" y="56" width="24" height="8" rx="2" fill="#2d0a0a" stroke="#ef4444" stroke-width="1.5"/>
+            <line x1="22" y1="64" x2="14" y2="84" stroke="#ef4444" stroke-width="2"/>
+            <line x1="30" y1="64" x2="30" y2="84" stroke="#ef4444" stroke-width="2"/>
+            <line x1="38" y1="64" x2="46" y2="84" stroke="#ef4444" stroke-width="2"/>
+          </g>
+          <text x="40" y="140" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Noto Sans JP">標識ファージ</text>
+        </g>
+
+        <!-- 大腸菌 -->
+        <g id="hBacteria" transform="translate(200,60)">
+          <ellipse cx="50" cy="40" rx="45" ry="30" fill="#052e16" stroke="#16a34a" stroke-width="2"/>
+          <text x="50" y="38" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Noto Sans JP">大腸菌</text>
+          <text x="50" y="52" text-anchor="middle" fill="#22c55e" font-size="10" font-family="Noto Sans JP">（感染中）</text>
+        </g>
+
+        <!-- 矢印（感染） -->
+        <path d="M70 90 L195 90" stroke="#252f45" stroke-width="1.5" marker-end="url(#arH)" fill="none"/>
+        <defs>
+          <marker id="arH" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+            <path d="M1 1L7 4L1 7" fill="none" stroke="#475569" stroke-width="1.5"/>
+          </marker>
+        </defs>
+
+        <!-- 矢印（遠心分離） -->
+        <text x="340" y="85" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Noto Sans JP">遠心分離</text>
+        <path d="M305 95 L385 95" stroke="#252f45" stroke-width="1.5" marker-end="url(#arH)" fill="none"/>
+
+        <!-- 試験管（上清） -->
+        <g transform="translate(395,30)">
+          <rect x="0" y="0" width="44" height="80" rx="0" fill="#1a2235" stroke="#252f45" stroke-width="1.5"/>
+          <ellipse cx="22" cy="80" rx="22" ry="8" fill="#1a2235" stroke="#252f45" stroke-width="1.5"/>
+          <text x="22" y="-8" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Noto Sans JP">上清</text>
+          <text x="22" y="3" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="Noto Sans JP">（殻）</text>
+          <!-- 放射能マーカー（JS制御） -->
+          <text id="hUp" x="22" y="50" text-anchor="middle" font-size="18" opacity="0">❓</text>
+        </g>
+
+        <!-- 試験管（沈殿） -->
+        <g transform="translate(500,30)">
+          <rect x="0" y="0" width="44" height="80" rx="0" fill="#1a2235" stroke="#252f45" stroke-width="1.5"/>
+          <ellipse cx="22" cy="80" rx="22" ry="8" fill="#1a2235" stroke="#252f45" stroke-width="1.5"/>
+          <text x="22" y="-8" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Noto Sans JP">沈殿</text>
+          <text x="22" y="3" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="Noto Sans JP">（細菌）</text>
+          <text id="hDown" x="22" y="50" text-anchor="middle" font-size="18" opacity="0">❓</text>
+        </g>
+
+        <!-- ラベル -->
+        <text x="417" y="130" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Noto Sans JP">上清</text>
+        <text x="522" y="130" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Noto Sans JP">沈殿</text>
+      </svg>
+    </div>
+
+    <div class="result gray" id="hResult">標識の種類を選ぶと遠心分離の結果が表示されます。</div>
+    <div id="hInsight" style="display:none"></div>
+
+    <div style="margin-top:12px">
+      <div class="prog" id="hProg">
+        <div class="dot" id="hd0"></div><div class="dot" id="hd1"></div>
+      </div>
+      <div style="font-size:12px;color:var(--mut)">2条件両方試そう（<span id="hCnt">0</span>/2）</div>
+    </div>
+    <div id="hDone" style="display:none;margin-top:12px">
+      <div class="point ylw"><strong>完了！</strong> ³²P（DNA）→ 沈殿（細菌の中）に検出。ファージが細菌に注入したのはDNA。タンパク質は外に残った。</div>
+      <button class="ctrl-btn prp" style="margin-top:8px" onclick="goTab('result')">まとめへ →</button>
+    </div>
+  </div>
+
+  <div class="point ylw"><strong>なぜ決定的だったか：</strong>物理的な放射性標識でDNAとタンパク質を完全に分離追跡。「エイブリーの結果は純粋でない」という批判を覆した。</div>
+</div>
+
+<!-- ═══════════════ まとめ ═══════════════ -->
+<div class="scr" id="result">
+  <div class="conclusion">
+    <div style="color:#60a5fa;font-size:14px;font-weight:700;margin-bottom:14px">今日の問いへの答え</div>
+    <p style="font-size:15px;line-height:1.9;color:#cbd5e1;margin-bottom:10px">
+      <strong style="color:#fff">問い1：</strong>すべての生物の遺伝子の本体は<strong style="color:var(--ylw)">DNA（デオキシリボ核酸）</strong>である。
+    </p>
+    <p style="font-size:15px;line-height:1.9;color:#cbd5e1">
+      <strong style="color:#fff">問い2：</strong>遺伝情報は<strong style="color:var(--ylw)">DNA</strong>に含まれており、細胞分裂のたびにDNAが複製されることで親から子へ伝わる。
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>3つの実験の証拠の積み重ね</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:8px">
+      <div style="background:var(--grnl);border:1px solid var(--grn);border-radius:8px;padding:14px">
+        <div style="color:var(--grn);font-weight:700;font-size:13px;margin-bottom:6px">① グリフィス（1928）🐭</div>
+        <div style="color:var(--mut);font-size:12px;line-height:1.7">死んだS型菌＋生R型菌 → マウス死亡。「形質転換因子」の存在を発見。正体は不明。</div>
+      </div>
+      <div style="background:var(--blul);border:1px solid var(--blu);border-radius:8px;padding:14px">
+        <div style="color:var(--blu);font-weight:700;font-size:13px;margin-bottom:6px">② エイブリー（1944）🧬</div>
+        <div style="color:var(--mut);font-size:12px;line-height:1.7">DNA分解酵素で処理すると形質転換停止。形質転換因子＝DNA。</div>
+      </div>
+      <div style="background:var(--ylwl);border:1px solid var(--ylw);border-radius:8px;padding:14px">
+        <div style="color:var(--ylw);font-weight:700;font-size:13px;margin-bottom:6px">③ ハーシー&amp;チェイス（1952）🦠</div>
+        <div style="color:var(--mut);font-size:12px;line-height:1.7">ファージが細菌に注入するのはDNAだけ。タンパク質は外に残る。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>重要用語</h3>
+    <div class="term-grid">
+      <div class="term-card"><div style="color:var(--prp);font-weight:700;font-size:13px;margin-bottom:4px">形質</div><div style="color:var(--mut);font-size:12px">生物がもつ外見や性質の特徴（毛の色・血液型・病原性の有無など）</div></div>
+      <div class="term-card"><div style="color:var(--prp);font-weight:700;font-size:13px;margin-bottom:4px">遺伝</div><div style="color:var(--mut);font-size:12px">親の形質が子に伝わること</div></div>
+      <div class="term-card"><div style="color:var(--prp);font-weight:700;font-size:13px;margin-bottom:4px">遺伝情報</div><div style="color:var(--mut);font-size:12px">形質を決める情報。DNAに含まれる</div></div>
+      <div class="term-card"><div style="color:var(--prp);font-weight:700;font-size:13px;margin-bottom:4px">DNA</div><div style="color:var(--mut);font-size:12px">デオキシリボ核酸。遺伝子の本体。4種類の塩基の配列に情報が記録される</div></div>
+      <div class="term-card"><div style="color:var(--prp);font-weight:700;font-size:13px;margin-bottom:4px">遺伝子</div><div style="color:var(--mut);font-size:12px">DNAの中でタンパク質の情報をもつ区間。形質を決める単位</div></div>
+      <div class="term-card"><div style="color:var(--prp);font-weight:700;font-size:13px;margin-bottom:4px">形質転換</div><div style="color:var(--mut);font-size:12px">外部からDNAを取り込み、生物の形質が変化すること</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function goTab(id){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  document.querySelectorAll('.tab').forEach(b=>{if(b.dataset.t===id)b.classList.add('on')});
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>goTab(b.dataset.t)));
+
+/* ═══ グリフィス ═══ */
+const gDone=new Set();
+const gData=[
+  {btn:'g0',icon:'💀',cls:'red',
+   txt:'<strong style="color:#ef4444">マウスは死亡した</strong><br>生きたS型菌は病原性をもつ。マウスは肺炎を発症して死亡。',
+   hint:'これは予想通り。S型菌は病原性あり。',mouse:'dead'},
+  {btn:'g1',icon:'😊',cls:'grn',
+   txt:'<strong style="color:#22c55e">マウスは生存した</strong><br>生きたR型菌は病原性なし。マウスは元気なまま。',
+   hint:'予想通り。R型菌は病原性なし。',mouse:'alive'},
+  {btn:'g2',icon:'😊',cls:'grn',
+   txt:'<strong style="color:#22c55e">マウスは生存した</strong><br>加熱殺菌でS型菌の病原性は失われた。死んだ菌に病原性はない。',
+   hint:'予想通り。死んだS型菌は害なし。',mouse:'alive'},
+  {btn:'g3',icon:'💀❗',cls:'ylw',
+   txt:'<strong style="color:#facc15">マウスは死亡した！（予想外！）</strong><br>死んだS型菌と病原性のないR型菌の混合物なのにマウスが死亡。体内から<strong>生きたS型菌</strong>が検出された。R型菌がS型菌に変化した = <strong>形質転換</strong>！',
+   hint:'グリフィスの大発見！「形質転換因子」が存在する。',mouse:'dead',special:true},
+];
+
+function doGriffin(num){
+  gDone.add(num);
+  const d=gData[num];
+  ['g0','g1','g2','g3'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  document.getElementById(d.btn).classList.add('active');
+
+  const mouse=document.getElementById('gMouse');
+  const special=document.getElementById('gSpecial');
+  const arrow=document.getElementById('gArrow');
+  special.style.opacity='0';
+  arrow.style.opacity='1';
+
+  if(d.mouse==='dead'){
+    mouse.style.transform='translate(280px,40px) rotate(25deg)';
+    mouse.style.transition='transform .8s ease';
+    if(d.special){
+      setTimeout(()=>{special.style.opacity='1';special.style.transition='opacity .4s';},900);
+    }
+  } else {
+    mouse.style.transform='translate(280px,40px) rotate(0deg)';
+    mouse.style.transition='transform .5s ease';
+  }
+
+  const result=document.getElementById('gResult');
+  result.className='result '+d.cls+' fade-in';
+  result.innerHTML='<span style="font-size:22px">'+d.icon+'</span><br>'+d.txt;
+
+  document.getElementById('gInsight').style.display='block';
+  document.getElementById('gInsight').innerHTML='<div class="point grn fade-in" style="margin-top:8px">💡 '+d.hint+'</div>';
+
+  document.getElementById('gCnt').textContent=gDone.size;
+  [0,1,2,3].forEach(num=>document.getElementById('gd'+num).className='dot'+(gDone.has(num)?' done':''));
+  if(gDone.size>=4) document.getElementById('gDone').style.display='block';
+}
+
+/* ═══ エイブリー ═══ */
+const aDone=new Set();
+const aData={
+  DNA:{btn:'a0',cls:'red',colony:false,
+    txt:'<strong style="color:#ef4444">形質転換が起きなかった</strong>（S型コロニーなし）<br>DNAを分解すると形質転換が止まった。→ <strong>DNAが形質転換因子</strong>だ！',
+    hint:'最重要結果！DNAこそが遺伝子の本体を担う分子。'},
+  prot:{btn:'a1',cls:'grn',colony:true,
+    txt:'<strong style="color:#22c55e">形質転換は起きた</strong>（S型コロニーあり）<br>タンパク質を分解しても形質転換は起きる。→ タンパク質は形質転換因子ではない。',
+    hint:'タンパク質は遺伝情報の担い手ではない。'},
+  RNA:{btn:'a2',cls:'grn',colony:true,
+    txt:'<strong style="color:#22c55e">形質転換は起きた</strong>（S型コロニーあり）<br>RNAを分解しても形質転換は起きる。→ RNAは形質転換因子ではない。',
+    hint:'RNAも遺伝情報の担い手ではない（この時点では）。'},
+  none:{btn:'a3',cls:'blu',colony:true,
+    txt:'<strong style="color:#3b82f6">形質転換が起きた</strong>（対照実験）<br>何も分解しない場合、通常通り形質転換が起きる。S型コロニーが出現。',
+    hint:'対照実験：操作なしの基準。各処理と比較するための基準点。'},
+};
+
+function doAvery(key){
+  aDone.add(key);
+  const d=aData[key];
+  // active 除去：エイブリーのボタン4つだけ対象
+  ['a0','a1','a2','a3'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  document.getElementById(d.btn).classList.add('active');
+
+  const enzyme=document.getElementById('aEnzyme');
+  const colonies=document.getElementById('aColonies');
+  const noColony=document.getElementById('aNoColony');
+  enzyme.style.opacity='1';
+  enzyme.style.transition='opacity .4s';
+  colonies.style.opacity='0';
+  noColony.style.opacity='0';
+  setTimeout(()=>{
+    if(d.colony){colonies.style.opacity='1';colonies.style.transition='opacity .5s';}
+    else{noColony.style.opacity='1';noColony.style.transition='opacity .5s';}
+  },600);
+
+  document.getElementById('aResult').className='result '+d.cls+' fade-in';
+  document.getElementById('aResult').innerHTML=d.txt;
+  document.getElementById('aInsight').style.display='block';
+  document.getElementById('aInsight').innerHTML='<div class="point blu fade-in" style="margin-top:8px">💡 '+d.hint+'</div>';
+
+  // 正確なカウント（aDoneに実際に追加した数）
+  document.getElementById('aCnt').textContent=aDone.size;
+  ['DNA','prot','RNA','none'].forEach((k,i)=>{
+    document.getElementById('ad'+i).className='dot'+(aDone.has(k)?' done':'');
+  });
+  if(aDone.size>=4) document.getElementById('aDone').style.display='block';
+}
+
+/* ═══ ハーシー＆チェイス ═══ */
+const hDone=new Set();
+const hData={
+  P32:{btn:'h0',
+    up:{icon:'⚪',color:'#475569',label:'³²P 未検出'},
+    down:{icon:'⚡',color:'#facc15',label:'³²P 検出！'},
+    cls:'ylw',
+    txt:'<strong style="color:#facc15">³²P（DNA標識）の結果</strong><br>沈殿（細菌）に³²Pの放射能が検出 → <strong>DNAが細菌の中に入った</strong>。上清（ファージの殻）にはほとんど検出されず。',
+    hint:'DNAが細菌に注入されて次世代ファージの遺伝情報となる。遺伝子の本体はDNA！'},
+  S35:{btn:'h1',
+    up:{icon:'⚡',color:'#ef4444',label:'³⁵S 検出！'},
+    down:{icon:'⚪',color:'#475569',label:'³⁵S 未検出'},
+    cls:'red',
+    txt:'<strong style="color:#ef4444">³⁵S（タンパク質標識）の結果</strong><br>上清（ファージの殻）に³⁵Sの放射能が検出 → <strong>タンパク質は細菌の外に残った</strong>。沈殿にはほとんど検出されず。',
+    hint:'タンパク質は遺伝情報を伝えない。ファージの殻として外に残るだけ。'},
+};
+
+function doHershey(key){
+  hDone.add(key);
+  const d=hData[key];
+  // active 除去：ハーシーのボタン2つだけ対象
+  ['h0','h1'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  document.getElementById(d.btn).classList.add('active');
+
+  const up=document.getElementById('hUp');
+  const down=document.getElementById('hDown');
+  up.textContent=d.up.icon;
+  up.style.fill=d.up.color;
+  down.textContent=d.down.icon;
+  down.style.fill=d.down.color;
+  up.style.opacity='0';
+  down.style.opacity='0';
+  setTimeout(()=>{
+    up.style.opacity='1';up.style.transition='opacity .5s';
+    down.style.opacity='1';down.style.transition='opacity .5s';
+  },400);
+
+  document.getElementById('hResult').className='result '+d.cls+' fade-in';
+  document.getElementById('hResult').innerHTML=d.txt;
+  document.getElementById('hInsight').style.display='block';
+  document.getElementById('hInsight').innerHTML='<div class="point ylw fade-in" style="margin-top:8px">💡 '+d.hint+'</div>';
+
+  ['P32','S35'].forEach((k,i)=>{
+    document.getElementById('hd'+i).className='dot'+(hDone.has(k)?' done':'');
+  });
+  document.getElementById('hCnt').textContent=hDone.size;
+  if(hDone.size>=2) document.getElementById('hDone').style.display='block';
+}
+</script>
+</body>
